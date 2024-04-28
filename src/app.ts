@@ -1,6 +1,5 @@
 import express from 'express'
 
-
 //Importing Routes
 
 import userRoute from './routes/user.js';
