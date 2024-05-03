@@ -10,7 +10,7 @@ export const adminOnly = TryCatch(async (req, res, next) => {
     if (!user)
         return next(new ErrorHandler("User id does not exist", 401));
     if (user.role !== 'admin')
-        return next(new ErrorHandler("You don not posses any specific admin privileges", 401));
+        return next(new ErrorHandler("You don not posses any specific admin privileges", 403));
     next();
 });
 // "api/v1/user/asdfsadf?key=24"  //query
