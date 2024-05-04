@@ -11,7 +11,6 @@ import { rm } from "fs";
 import { myCache } from "../app.js";
 import { invalidateCache } from "../utils/features.js";
 
-
 // revalidate on New, update or delete, product and new Order
 export const getLatestProducts = TryCatch(async (req, res, next) => {
   let products;
@@ -52,7 +51,7 @@ export const getAdminProducts = TryCatch(async (req, res, next) => {
     products = JSON.parse(myCache.get("all-products") as string);
   else {
     const products = await Product.find({});
-    myCache.set("all-products",JSON.stringify(products));
+    myCache.set("all-products", JSON.stringify(products));
   }
   return res.status(201).json({
     success: true,
@@ -61,15 +60,15 @@ export const getAdminProducts = TryCatch(async (req, res, next) => {
 });
 
 export const getSingleProduct = TryCatch(async (req, res, next) => {
-
   let product;
-  const id=req.params.id;
-  if(myCache.has(`product-${id}`)) product = JSON.parse(myCache.get(`product-${id}`) as string);
+  const id = req.params.id;
 
-  else{
+  if (myCache.has(`product-${id}`))
+    product = JSON.parse(myCache.get(`product-${id}`) as string);
+  else {
     product = await Product.findById(id);
     if (!product) return next(new ErrorHandler("Product not found", 404));
-    myCache.set(`product-${id}`,JSON.stringify(product));
+    myCache.set(`product-${id}`, JSON.stringify(product));
   }
 
   return res.status(200).json({
@@ -77,7 +76,6 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
     product,
   });
 });
-
 
 export const newProduct = TryCatch(
   async (
@@ -106,7 +104,7 @@ export const newProduct = TryCatch(
       photo: photo.path,
     });
 
-    await invalidateCache({product: true});
+    invalidateCache({ product: true, admin: true });
 
     return res.status(200).json({
       success: true,
@@ -114,7 +112,6 @@ export const newProduct = TryCatch(
     });
   }
 );
-
 
 export const updateProduct = TryCatch(async (req, res, next) => {
   const { id } = req.params;
@@ -140,7 +137,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
 
   await product.save();
 
-  await invalidateCache({product: true, productId: String(product._id)});
+  invalidateCache({
+    product: true,
+    productId: String(product._id),
+    admin: true,
+  });
 
   return res.status(200).json({
     success: true,
@@ -158,7 +159,8 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   await product.deleteOne();
 
-  await invalidateCache({product: true, productId: String(product._id)});
+  invalidateCache({ product: true, productId: String(product._id),
+    admin: true });
 
   return res.status(201).json({
     success: true,

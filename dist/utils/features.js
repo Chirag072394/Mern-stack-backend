@@ -9,7 +9,7 @@ export const connectDB = (uri) => {
         .then((c) => console.log(`DB connected to ${c.connection.host}`))
         .catch((e) => console.log(e));
 };
-export const invalidateCache = async ({ product, order, admin, userId, orderId, productId, }) => {
+export const invalidateCache = ({ product, order, admin, userId, orderId, productId, }) => {
     if (product) {
         const productKeys = [
             "latest-products",
@@ -30,6 +30,7 @@ export const invalidateCache = async ({ product, order, admin, userId, orderId, 
         myCache.del(ordersKeys);
     }
     if (admin) {
+        myCache.del(["admin-stats", "get-pie-charts", "admin-bar-charts", "admin-line-charts"]);
     }
 };
 export const reduceStock = async (orderItems) => {
@@ -45,6 +46,34 @@ export const reduceStock = async (orderItems) => {
 export const calculatePercentage = (thisMonth, lastMonth) => {
     if (lastMonth === 0)
         return thisMonth * 100;
-    const percentage = ((thisMonth - lastMonth) / lastMonth) * 100;
+    const percentage = (thisMonth / lastMonth) * 100;
     return Number(percentage.toFixed(0));
+};
+//Categories function
+export const getInventories = async ({ categories, productCount, }) => {
+    const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+    const categoriesCount = await Promise.all(categoriesCountPromise);
+    const categoryCount = [];
+    categories.forEach((category, i) => {
+        categoryCount.push({
+            [category]: Math.round((categoriesCount[i] / productCount) * 100),
+        });
+    });
+    return categoryCount;
+};
+export const getChartData = ({ length, docArr, today, property }) => {
+    const data = new Array(length).fill(0);
+    docArr.forEach((i) => {
+        const creationDate = i.createdAt;
+        const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
+        if (monthDiff < length) {
+            if (property) {
+                data[length - monthDiff - 1] += i[property];
+            }
+            else {
+                data[length - monthDiff - 1] += 1;
+            }
+        }
+    });
+    return data;
 };

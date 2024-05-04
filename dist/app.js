@@ -10,12 +10,15 @@ import productRoute from './routes/products.js';
 import orderRoute from './routes/order.js';
 import paymentRoute from './routes/payment.js';
 import dashboardRoute from './routes/stats.js';
+import Stripe from 'stripe';
 config({
     path: "./.env",
 });
 const port = process.env.PORT || 4000;
 const mongoURI = process.env.MONGO_URI || "";
+const stripeKey = process.env.STRIPE_KEY || "";
 connectDB(mongoURI);
+export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 const app = express();
 app.use(express.json());
